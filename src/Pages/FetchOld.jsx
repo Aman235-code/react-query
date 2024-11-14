@@ -10,11 +10,8 @@ export default function FetchOld() {
     try {
       setisLoading(true);
       const data = await fetchPosts();
-      if (data.status === 200) {
-        console.log(data);
-        setposts(data);
-        setisError(false);
-      }
+      setposts(data);
+      setisError(false);
       setisLoading(false);
     } catch (error) {
       console.log(error);
