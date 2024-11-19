@@ -1,10 +1,16 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { fetchPosts } from "../api/api";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { deletePost, fetchPosts } from "../api/api";
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
 
 export default function FetchRq() {
   const [pageNo, setPageno] = useState(0);
+  const queryClient = useQueryClient();
   const { data, isPending, isError, error } = useQuery({
     queryKey: ["posts", pageNo], // use state
     queryFn: () => fetchPosts(pageNo), // use effect
@@ -13,6 +19,16 @@ export default function FetchRq() {
     // refetchInterval: 1000, // after 1 sec req will be hit
     // refetchIntervalInBackground: true, // enables bg fetching of the ata when you're in different tab
     placeholderData: keepPreviousData, // only update when new data comes (shows loading) else no
+  });
+
+  // to delete the post
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deletePost(id),
+    onSuccess: (data, id) => {
+      queryClient.setQueryData(["posts", pageNo], (curElem) => {
+        return curElem?.filter((post) => post.id !== id);
+      });
+    },
   });
 
   if (isPending) return <p>Loading......</p>;
@@ -33,6 +49,7 @@ export default function FetchRq() {
                 <p>{name}</p>
                 <p>{username}</p>
               </NavLink>
+              <button onClick={() => deleteMutation.mutate(id)}>Delete</button>
             </div>
           );
         })}
